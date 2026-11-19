@@ -1,0 +1,148 @@
+<h2 class="sr-only">参数调节面板：左侧选择参数，右侧产品预览实时变化，可一键重置推荐值</h2>
+<style>
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.pp{--rp:60%;--gp-p:33%;--bl:50%;--br:25%;--gp:8px;--r:14px;
+    --card-bg:#F4F3EF;--card-fg:#2C2C2A;--card-sub:#888780;--chip-bg:#E7E5DE;
+    --accent:#444441;--accent-fg:#FFFFFF;
+    font-family:var(--font-sans);color:var(--color-text-primary);font-size:13px;line-height:1.6}
+.pp .hd{font-weight:500;font-size:15px;margin-bottom:2px}
+.pp .sub{color:var(--color-text-secondary);margin-bottom:14px}
+.pp .grid{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
+.pp .f{margin-bottom:14px}
+.pp .lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;color:var(--color-text-secondary)}
+.pp .lab b{font-weight:500;color:var(--color-text-primary)}
+.seg{display:flex;gap:3px;background:#F1EFE8;padding:3px;border-radius:9px}
+.seg input{position:absolute;opacity:0;width:0;height:0}
+.seg label{flex:1;text-align:center;padding:5px 2px;border-radius:7px;cursor:pointer;color:#5F5E5A;font-size:12px}
+.seg input:checked+label{background:#FFFFFF;color:#2C2C2A;font-weight:500}
+.trk{position:relative;height:22px;margin:15px 0 2px}
+.trk .rail{position:absolute;left:0;right:0;top:9px;height:4px;background:#E7E5DE;border-radius:2px}
+.trk .fill{position:absolute;left:0;top:9px;height:4px;background:#2C2C2A;border-radius:2px;width:var(--p)}
+.trk .knob{position:absolute;top:4px;width:14px;height:14px;border-radius:50%;background:#FFFFFF;border:1.5px solid #2C2C2A;transform:translateX(-50%);left:var(--p)}
+.trk input{position:absolute;opacity:0;width:0;height:0}
+.trk label{position:absolute;top:-4px;bottom:-4px;width:18%;transform:translateX(-50%);cursor:pointer}
+.trk input:checked+label::after{content:attr(data-v);position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:500;color:var(--color-text-primary);white-space:nowrap}
+.sw{position:relative;width:34px;height:20px;border-radius:10px;background:#D3D1C7;appearance:none;-webkit-appearance:none;cursor:pointer;outline:none;transition:background .15s}
+.sw:checked{background:#2C2C2A}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#FFFFFF;transition:left .15s}
+.sw:checked::after{left:16px}
+.acts{display:flex;gap:8px;margin-top:16px}
+.acts .rst{flex:0 0 auto;font-size:12px;padding:7px 12px;border:0.5px solid var(--color-border-secondary);border-radius:8px;background:transparent;color:var(--color-text-secondary);cursor:pointer}
+.acts .ok{flex:1;font-size:12px;font-weight:500;padding:8px 10px;border:0.5px solid #2C2C2A;border-radius:8px;background:#2C2C2A;color:#FFFFFF;cursor:pointer;white-space:nowrap}
+.stage{background:var(--color-background-tertiary);border-radius:var(--border-radius-lg);padding:16px;display:flex;align-items:center;justify-content:center;min-height:210px}
+.pcard{width:100%;background:var(--card-bg);color:var(--card-fg);border-radius:var(--r);padding:16px}
+.pcard .badge{display:none;font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--accent-fg);margin-bottom:8px}
+.pp:has(#sci:checked) .pcard .badge{display:inline-block}
+.pcard .kick{font-size:11px;letter-spacing:1px;color:var(--card-sub);margin-bottom:4px}
+.pcard .ttl{font-size:16px;font-weight:500;margin-bottom:4px}
+.pcard .dsc{font-size:12px;color:var(--card-sub);margin-bottom:12px}
+.pcard .chips{display:flex;gap:var(--gp);margin-bottom:14px;flex-wrap:wrap}
+.pcard .chip{font-size:11px;padding:3px 9px;border-radius:calc(var(--r) / 2);background:var(--chip-bg)}
+.pcard .barw{position:relative;height:6px;border-radius:3px;background:var(--chip-bg);margin-bottom:12px;overflow:hidden}
+.pcard .bar{position:absolute;top:0;bottom:0;left:var(--bl);right:var(--br);background:var(--accent);border-radius:3px}
+.pcard .foot{display:flex;justify-content:space-between;align-items:center;gap:var(--gp)}
+.pcard .plab{font-size:11px;color:var(--card-sub)}
+.pcard .btn{font-size:12px;font-weight:500;padding:7px 14px;border-radius:calc(var(--r) / 2);background:var(--accent);color:var(--accent-fg);white-space:nowrap}
+.pp:has(#tone-mono:checked){--card-bg:#F4F3EF;--card-fg:#2C2C2A;--card-sub:#888780;--chip-bg:#E7E5DE;--accent:#444441;--accent-fg:#FFFFFF}
+.pp:has(#tone-night:checked){--card-bg:#1C1C1E;--card-fg:#F5F5F7;--card-sub:#9A9AA0;--chip-bg:#2E2E31;--accent:#FF9F0A;--accent-fg:#1C1C1E}
+.pp:has(#tone-vivid:checked){--card-bg:#FFF1EA;--card-fg:#4A1B0C;--card-sub:#A25C3E;--chip-bg:#F5C4B3;--accent:#D85A30;--accent-fg:#FFFFFF}
+.pp:has(#r0:checked){--rp:0%;--r:0px}
+.pp:has(#r20:checked){--rp:20%;--r:5px}
+.pp:has(#r40:checked){--rp:40%;--r:10px}
+.pp:has(#r60:checked){--rp:60%;--r:14px}
+.pp:has(#r80:checked){--rp:80%;--r:18px}
+.pp:has(#r100:checked){--rp:100%;--r:24px}
+.pp:has(#g4:checked){--gp:4px;--gp-p:0%}
+.pp:has(#g8:checked){--gp:8px;--gp-p:33%}
+.pp:has(#g12:checked){--gp:12px;--gp-p:66%}
+.pp:has(#g16:checked){--gp:16px;--gp-p:100%}
+.pp:has(#pmin0:checked){--bl:0%}
+.pp:has(#pmin1:checked){--bl:25%}
+.pp:has(#pmin2:checked){--bl:50%}
+.pp:has(#pmin3:checked){--bl:75%}
+.pp:has(#pmin4:checked){--bl:100%}
+.pp:has(#pmax2:checked){--br:100%}
+.pp:has(#pmax4:checked){--br:75%}
+.pp:has(#pmax6:checked){--br:50%}
+.pp:has(#pmax8:checked){--br:25%}
+.pp:has(#pmax10:checked){--br:0%}
+</style>
+<div class="pp">
+  <div class="hd">夏日活动页 · 外观微调</div>
+  <div class="sub">左边挑，右边卡片立刻变样。挑到顺眼再确认。</div>
+  <div class="grid">
+    <div class="ctrl">
+      <div class="f">
+        <div class="lab"><b>配色风格</b></div>
+        <div class="seg">
+          <input type="radio" name="tone" id="tone-mono" checked data-def><label for="tone-mono">极简灰</label>
+          <input type="radio" name="tone" id="tone-night"><label for="tone-night">夜间</label>
+          <input type="radio" name="tone" id="tone-vivid"><label for="tone-vivid">珊瑚</label>
+        </div>
+      </div>
+      <div class="f">
+        <div class="lab"><b>圆角大小</b></div>
+        <div class="trk">
+          <div class="rail"></div><div class="fill" style="--p:var(--rp)"></div><div class="knob" style="--p:var(--rp)"></div>
+          <input type="radio" name="rad" id="r0"><label for="r0" style="left:0%" data-v="0%"></label>
+          <input type="radio" name="rad" id="r20"><label for="r20" style="left:20%" data-v="20%"></label>
+          <input type="radio" name="rad" id="r40"><label for="r40" style="left:40%" data-v="40%"></label>
+          <input type="radio" name="rad" id="r60" checked data-def><label for="r60" style="left:60%" data-v="60%"></label>
+          <input type="radio" name="rad" id="r80"><label for="r80" style="left:80%" data-v="80%"></label>
+          <input type="radio" name="rad" id="r100"><label for="r100" style="left:100%" data-v="100%"></label>
+        </div>
+      </div>
+      <div class="f">
+        <div class="lab"><b>元素间距</b></div>
+        <div class="trk">
+          <div class="rail"></div><div class="fill" style="--p:var(--gp-p)"></div><div class="knob" style="--p:var(--gp-p)"></div>
+          <input type="radio" name="gap" id="g4"><label for="g4" style="left:0%" data-v="4px"></label>
+          <input type="radio" name="gap" id="g8" checked data-def><label for="g8" style="left:33%" data-v="8px"></label>
+          <input type="radio" name="gap" id="g12"><label for="g12" style="left:66%" data-v="12px"></label>
+          <input type="radio" name="gap" id="g16"><label for="g16" style="left:100%" data-v="16px"></label>
+        </div>
+      </div>
+      <div class="f">
+        <div class="lab"><b>限时徽章</b><span>可选</span></div>
+        <input type="checkbox" class="sw" id="sci" data-def="0">
+      </div>
+      <div class="f">
+        <div class="lab"><b>价格下限</b><span>起</span></div>
+        <div class="trk">
+          <div class="rail"></div><div class="fill" style="--p:var(--bl)"></div><div class="knob" style="--p:var(--bl)"></div>
+          <input type="radio" name="pmin" id="pmin0"><label for="pmin0" style="left:0%" data-v="¥0"></label>
+          <input type="radio" name="pmin" id="pmin1"><label for="pmin1" style="left:25%" data-v="¥100"></label>
+          <input type="radio" name="pmin" id="pmin2" checked data-def><label for="pmin2" style="left:50%" data-v="¥200"></label>
+          <input type="radio" name="pmin" id="pmin3"><label for="pmin3" style="left:75%" data-v="¥300"></label>
+          <input type="radio" name="pmin" id="pmin4"><label for="pmin4" style="left:100%" data-v="¥400"></label>
+        </div>
+      </div>
+      <div class="f">
+        <div class="lab"><b>价格上限</b><span>止</span></div>
+        <div class="trk">
+          <div class="rail"></div><div class="fill" style="--p:calc(100% - var(--br))"></div><div class="knob" style="--p:calc(100% - var(--br))"></div>
+          <input type="radio" name="pmax" id="pmax2"><label for="pmax2" style="left:0%" data-v="¥200"></label>
+          <input type="radio" name="pmax" id="pmax4"><label for="pmax4" style="left:25%" data-v="¥400"></label>
+          <input type="radio" name="pmax" id="pmax6"><label for="pmax6" style="left:50%" data-v="¥600"></label>
+          <input type="radio" name="pmax" id="pmax8" checked data-def><label for="pmax8" style="left:75%" data-v="¥800"></label>
+          <input type="radio" name="pmax" id="pmax10"><label for="pmax10" style="left:100%" data-v="¥1000"></label>
+        </div>
+      </div>
+      <div class="acts">
+        <input type="button" class="rst" value="↺ 重置推荐" onclick="var r=this.closest('.pp');r.querySelectorAll('input[data-def]').forEach(function(e){e.checked=e.getAttribute('data-def')!=='0'})">
+        <button type="button" class="ok" onclick="var r=this.closest('.pp'),g=function(n){var e=r.querySelector('input[name='+n+']:checked');return e?(e.getAttribute('data-v')||''):''},t=r.querySelector('input[name=tone]:checked'),L=[];if(t)L.push('已确认：配色风格 = '+t.nextElementSibling.textContent+'。请据此继续生成。');if(g('rad'))L.push('已确认：圆角大小 = '+g('rad')+'。请据此继续生成。');if(g('gap'))L.push('已确认：元素间距 = '+g('gap')+'。请据此继续生成。');L.push('已确认：限时徽章 = '+(document.getElementById('sci').checked?'显示':'不显示')+'。请据此继续生成。');L.push('已确认：价格区间 = '+g('pmin')+'–'+g('pmax')+'。请据此继续生成。');if(typeof sendPrompt==='function')sendPrompt(L.join('\n'))">确认，就按这个做 ↗</button>
+      </div>
+    </div>
+    <div class="stage">
+      <div class="pcard">
+        <div class="badge">限时</div>
+        <div class="kick">SUMMER 2026</div>
+        <div class="ttl">夏日特惠</div>
+        <div class="dsc">全场通用券 · 限时领取</div>
+        <div class="chips"><span class="chip">轻量</span><span class="chip">包邮</span><span class="chip">可退</span></div>
+        <div class="barw"><div class="bar"></div></div>
+        <div class="foot"><span class="plab">价格区间</span><span class="plab">券后直降</span><span class="btn">立即查看</span></div>
+      </div>
+    </div>
+  </div>
+</div>
