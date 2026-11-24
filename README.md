@@ -129,6 +129,7 @@ git clone https://github.com/fjdaj0419/param-panel.git ~/.claude/skills/param-pa
 2. **渲染器禁止 `<form>`**，会直接报错拒绝加载，所以用 `<div>` 当容器。
 3. **辅助文字 `<h2 class="sr-only">` 必须配隐藏样式**，否则会显示成大标题。
 4. **显示数值一律圆整**（`Math.round`），单位位置区分前后缀（px 后缀、¥ 前缀）。
+5. **脚本里绝不能用 `document.createElement`**（v7 修复的核心）。宿主用 iframe 渲染 widget，若 5 秒内握手失败会降级到 inline 路径；那条路径执行脚本时传入的 `document` 是 `{...document}` 展开出的冒充对象，只有被显式覆盖的 `getElementById`/`querySelector`/`querySelectorAll` 能用，`createElement` 等原型方法全部丢失。旧版 `renderPicks`/`renderCtrls` 用 `createElement` 生成控件，在降级路径抛错且被宿主静默吞掉——表现极具迷惑性：**容器和卡片文案都在（写死在静态 HTML），但勾选框、拖动条、对照表全空**。v7 改为全部用 `元素的 innerHTML = 字符串` 生成 DOM、用 `addEventListener` 绑事件（iframe CSP 禁内联 onclick），两条渲染路径都能完整显示。
 
 ### 改模板只需动 `CONFIG` 一处
 
