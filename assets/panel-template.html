@@ -42,7 +42,7 @@
 .pcard .pl{font-size:11px;color:var(--sub)}
 .pcard .bt{font-size:12px;font-weight:500;padding:7px 14px;border-radius:7px;background:var(--ac);color:var(--afg);white-space:nowrap}
 .pp .acts{display:flex;gap:8px;margin-top:14px}
-.pp .acts button{flex:1;font-size:13px;font-weight:500;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer}
+.pp .acts button{flex:1;font-size:13px;font-weight:500;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer;white-space:nowrap}
 .pp .acts .ok{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
 </style>
 <div class="pp" id="pp">
@@ -74,9 +74,18 @@
   <div class="acts"><button type="button" id="rst">↺ 重置推荐</button><button type="button" class="ok" id="ok">确认，就按这个做 ↗</button></div>
 </div>
 <script>
+/* ============================================================
+   参数调节面板 v7 —— 宿主兼容版
+   关键约束：宿主降级路径的 scoped document 没有 createElement /
+   createTextNode 等原型方法，所以本脚本【绝不使用】这两个 API，
+   所有 DOM 一律通过元素的 innerHTML 字符串生成；事件用
+   addEventListener 绑定（iframe CSP 禁内联 onclick）。
+   ============================================================ */
 const CFG={
   title:'夏日活动页 · 外观微调',
   sub:'先勾选要调的参数（也能自己加），再拖动进度条或输入数值，右侧实时预览。',
+  kicker:'SUMMER 2026',titleText:'夏日特惠',desc:'全场通用券 · 限时领取',buttonText:'立即查看',
+  chips:['轻量','包邮','可退'],
   params:[
     {id:'tone',name:'配色风格',type:'segment',current:'极简灰',recommended:'极简灰',options:['极简灰','夜间','珊瑚'],on:true},
     {id:'radius',name:'圆角大小',type:'number',current:14,recommended:14,min:0,max:24,step:1,unit:'px',on:true},
@@ -94,92 +103,100 @@ const CFG={
       price:'¥'+(v.pmin||0)+' – ¥'+(v.pmax||0)};
   }
 };
-const $=id=>document.getElementById(id),ST={v:{},on:{}};
-function init(){
-  $('hd').textContent=CFG.title;$('sub').textContent=CFG.sub;
-  $('pkick').textContent=(CFG.kicker||'SUMMER 2026');
-  $('pttl').textContent=(CFG.titleText||'夏日特惠');
-  $('pdsc').textContent=(CFG.desc||'全场通用券 · 限时领取');
-  $('pbtn').textContent=(CFG.buttonText||'立即查看');
-  $('pchips').innerHTML=(CFG.chips||['轻量','包邮','可退']).map(x=>'<span class="ci">'+x+'</span>').join('');
-  CFG.params.forEach(p=>{ST.v[p.id]=p.recommended;ST.on[p.id]=!!p.on});
-  renderPicks();renderCtrls();sync();
-}
+const $=id=>document.getElementById(id);
+const ST={v:{},on:{}};
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function fmt(p,v){if(p.type==='switch')return v?'开':'关';if(p.type==='segment')return v;return p.prefixUnit?(p.unit||'')+v:v+(p.unit||'')}
 function fmtD(p,d){const x=Math.round(d*10)/10;if(Math.abs(x)<1e-9)return '0';const sign=x>0?'+':'-',a=Math.abs(x);return sign+(p.prefixUnit?(p.unit||'')+a:a+(p.unit||''))}
+
+/* 用 innerHTML 一次性生成所有勾选框（不碰 createElement） */
 function renderPicks(){
-  const el=$('picks');el.innerHTML='';
-  CFG.params.forEach(p=>{
-    const lab=document.createElement('label');lab.className='pick';
-    const cb=document.createElement('input');cb.type='checkbox';cb.checked=ST.on[p.id];
-    cb.onchange=()=>{ST.on[p.id]=cb.checked;sync()};
-    const n=document.createElement('span');n.textContent=p.name;
-    const c=document.createElement('span');c.className='cur';c.textContent='当前 '+fmt(p,p.current);
-    lab.append(cb,n,c);el.append(lab);
+  let h='';
+  CFG.params.forEach((p,i)=>{
+    h+='<label class="pick"><input type="checkbox" data-pick="'+i+'"'+(ST.on[p.id]?' checked':'')+'><span>'+esc(p.name)+'</span><span class="cur">当前 '+esc(fmt(p,p.current))+'</span></label>';
   });
+  $('picks').innerHTML=h;
+  const boxes=$('picks').querySelectorAll('input[data-pick]');
+  for(let i=0;i<boxes.length;i++){
+    boxes[i].addEventListener('change',function(){ST.on[CFG.params[i].id]=this.checked;sync()});
+  }
 }
+
+/* 用 innerHTML 一次性生成所有控件行（不碰 createElement） */
 function renderCtrls(){
-  const el=$('ctrls');el.innerHTML='';
-  CFG.params.forEach(p=>{
-    const row=document.createElement('div');row.className='row';row.id='row-'+p.id;
-    const top=document.createElement('div');top.className='top';
-    const nm=document.createElement('b');nm.textContent=p.name;
-    const nums=document.createElement('span');nums.className='nums';nums.id='nums-'+p.id;
-    top.append(nm,nums);
-    const ctl=document.createElement('div');ctl.className='ctl';
+  let h='';
+  CFG.params.forEach((p,i)=>{
+    h+='<div class="row" data-row="'+esc(p.id)+'"><div class="top"><b>'+esc(p.name)+'</b><span class="nums" data-nums="'+esc(p.id)+'"></span></div><div class="ctl">';
     if(p.type==='number'){
-      const r=document.createElement('input');r.type='range';r.min=p.min;r.max=p.max;r.step=p.step;r.value=ST.v[p.id];r.id='r-'+p.id;
-      r.oninput=()=>set(p.id,r.value);
-      const n=document.createElement('input');n.type='number';n.min=p.min;n.max=p.max;n.step=p.step;n.value=ST.v[p.id];n.id='n-'+p.id;
-      n.oninput=()=>set(p.id,n.value);
-      ctl.append(r,n);
+      h+='<input type="range" data-r="'+esc(p.id)+'" min="'+p.min+'" max="'+p.max+'" step="'+p.step+'" value="'+ST.v[p.id]+'"><input type="number" data-n="'+esc(p.id)+'" min="'+p.min+'" max="'+p.max+'" step="'+p.step+'" value="'+ST.v[p.id]+'">';
     }else if(p.type==='segment'){
-      const box=document.createElement('div');box.className='segs';box.id='seg-'+p.id;
-      p.options.forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o;b.dataset.v=o;b.onclick=()=>set(p.id,o);box.append(b)});
-      ctl.append(box);
+      h+='<div class="segs" data-seg="'+esc(p.id)+'">';
+      p.options.forEach(o=>{h+='<button type="button" data-v="'+esc(o)+'">'+esc(o)+'</button>'});
+      h+='</div>';
     }else{
-      const b=document.createElement('button');b.type='button';b.className='mini';b.id='sw-'+p.id;b.onclick=()=>set(p.id,!ST.v[p.id]);ctl.append(b);
+      h+='<button type="button" class="mini" data-sw="'+esc(p.id)+'"></button>';
     }
-    row.append(top,ctl);el.append(row);
+    h+='</div></div>';
+  });
+  $('ctrls').innerHTML=h;
+
+  CFG.params.forEach(p=>{
+    if(p.type==='number'){
+      const r=$('ctrls').querySelector('[data-r="'+p.id+'"]');
+      const n=$('ctrls').querySelector('[data-n="'+p.id+'"]');
+      if(r)r.addEventListener('input',function(){set(p.id,this.value)});
+      if(n)n.addEventListener('input',function(){set(p.id,this.value)});
+    }else if(p.type==='segment'){
+      const box=$('ctrls').querySelector('[data-seg="'+p.id+'"]');
+      if(box){const bs=box.querySelectorAll('button');for(let i=0;i<bs.length;i++){bs[i].addEventListener('click',function(){set(p.id,this.getAttribute('data-v'))})}}
+    }else{
+      const sw=$('ctrls').querySelector('[data-sw="'+p.id+'"]');
+      if(sw)sw.addEventListener('click',function(){set(p.id,!ST.v[p.id])});
+    }
   });
 }
 function set(id,v){
   const p=CFG.params.find(x=>x.id===id);if(!p)return;
   if(p.type==='number'){
     v=Math.max(p.min,Math.min(p.max,Number(v)||0));
-    $('r-'+id).value=v;$('n-'+id).value=v;
+    const r=$('ctrls').querySelector('[data-r="'+id+'"]'),n=$('ctrls').querySelector('[data-n="'+id+'"]');
+    if(r)r.value=v;if(n)n.value=v;
   }else if(p.type==='switch'){v=!!v}
   ST.v[id]=v;sync();
 }
 function sync(){
   CFG.params.forEach(p=>{
     const v=ST.v[p.id];
-    const row=$('row-'+p.id);if(row)row.classList.toggle('off',!ST.on[p.id]);
-    const nums=$('nums-'+p.id);
+    const row=$('ctrls').querySelector('[data-row="'+p.id+'"]');
+    if(row){if(ST.on[p.id])row.classList.remove('off');else row.classList.add('off')}
+    const nums=$('ctrls').querySelector('[data-nums="'+p.id+'"]');
     if(nums){
       const dt=p.type==='number'?fmtD(p,v-p.current):(v===p.current?'无变化':'已改变');
-      nums.innerHTML='当前 '+fmt(p,p.current)+' · <em>调整后 '+fmt(p,v)+'</em> <span style="color:var(--color-text-tertiary)">'+dt+'</span>';
+      nums.innerHTML='当前 '+esc(fmt(p,p.current))+' · <em>调整后 '+esc(fmt(p,v))+'</em> <span style="color:var(--color-text-tertiary)">'+esc(dt)+'</span>';
     }
-    if(p.type==='segment'){const box=$('seg-'+p.id);if(box)Array.from(box.children).forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
-    if(p.type==='switch'){const b=$('sw-'+p.id);if(b)b.textContent=v?'已开启 · 点击关闭':'未开启 · 点击开启'}
+    if(p.type==='segment'){
+      const box=$('ctrls').querySelector('[data-seg="'+p.id+'"]');
+      if(box){const bs=box.querySelectorAll('button');for(let i=0;i<bs.length;i++){if(bs[i].getAttribute('data-v')===v)bs[i].classList.add('on');else bs[i].classList.remove('on')}}
+    }
+    if(p.type==='switch'){
+      const sw=$('ctrls').querySelector('[data-sw="'+p.id+'"]');
+      if(sw)sw.textContent=v?'已开启 · 点击关闭':'未开启 · 点击开启';
+    }
   });
   renderDiff();applyPreview();
 }
 function vals(){const o={};CFG.params.forEach(p=>o[p.id]=ST.v[p.id]);return o}
 function renderDiff(){
-  const el=$('diff');el.innerHTML='';let any=false;
+  let h='',any=false;
   CFG.params.forEach(p=>{
     if(!ST.on[p.id])return;
     const v=ST.v[p.id];
     const ch=p.type==='number'?Math.abs(v-p.current)>1e-9:v!==p.current;
     if(!ch)return;any=true;
-    const r=document.createElement('div');r.className='drow';
-    const a=document.createElement('span');a.textContent=p.name;
-    const b=document.createElement('b');
-    b.textContent=fmt(p,p.current)+' → '+fmt(p,v)+(p.type==='number'?' ('+fmtD(p,v-p.current)+')':'');
-    r.append(a,b);el.append(r);
+    h+='<div class="drow"><span>'+esc(p.name)+'</span><b>'+esc(fmt(p,p.current)+' → '+fmt(p,v)+(p.type==='number'?' ('+fmtD(p,v-p.current)+')':''))+'</b></div>';
   });
-  if(!any){const r=document.createElement('div');r.className='drow';r.innerHTML='<span>暂无变更</span><b>调整数值后显示</b>';el.append(r)}
+  if(!any)h+='<div class="drow"><span>暂无变更</span><b>调整数值后显示</b></div>';
+  $('diff').innerHTML=h;
 }
 function applyPreview(){
   const d=CFG.preview(vals()),c=$('pcard');
@@ -190,15 +207,25 @@ function applyPreview(){
   $('pbar').style.marginLeft=d.barL;$('pbar').style.width=d.barW;
   $('pprice').textContent=d.price;
 }
-$('add').onclick=()=>{
+function init(){
+  $('hd').textContent=CFG.title;$('sub').textContent=CFG.sub;
+  $('pkick').textContent=(CFG.kicker||'SUMMER 2026');
+  $('pttl').textContent=(CFG.titleText||'夏日特惠');
+  $('pdsc').textContent=(CFG.desc||'全场通用券 · 限时领取');
+  $('pbtn').textContent=(CFG.buttonText||'立即查看');
+  $('pchips').innerHTML=(CFG.chips||[]).map(x=>'<span class="ci">'+esc(x)+'</span>').join('');
+  CFG.params.forEach(p=>{ST.v[p.id]=p.recommended;ST.on[p.id]=!!p.on});
+  renderPicks();renderCtrls();sync();
+}
+$('add').addEventListener('click',()=>{
   const n=$('cust').value.trim();if(!n)return;
   const id='c'+Date.now();
   CFG.params.push({id,name:n,type:'number',current:50,recommended:50,min:0,max:100,step:1,unit:'',on:true,custom:true});
   ST.v[id]=50;ST.on[id]=true;$('cust').value='';
   renderPicks();renderCtrls();sync();
-};
-$('rst').onclick=()=>{CFG.params.forEach(p=>{ST.v[p.id]=p.recommended});renderCtrls();sync()};
-$('ok').onclick=()=>{
+});
+$('rst').addEventListener('click',()=>{CFG.params.forEach(p=>{ST.v[p.id]=p.recommended});renderCtrls();sync()});
+$('ok').addEventListener('click',()=>{
   const L=[];
   CFG.params.forEach(p=>{
     if(!ST.on[p.id])return;
@@ -206,6 +233,6 @@ $('ok').onclick=()=>{
     L.push('已确认：'+p.name+' = '+fmt(p,v)+'（当前 '+fmt(p,p.current)+(p.type==='number'?'，变化 '+fmtD(p,v-p.current):'')+'）。请据此继续生成。');
   });
   if(typeof sendPrompt==='function')sendPrompt(L.join('\n'));
-};
+});
 init();
 </script>

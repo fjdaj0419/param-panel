@@ -85,16 +85,17 @@ description: 在对话生成产品/内容的过程中，当模型需要向用户
 3. **变更对照 + 预览区**：只列有变化的参数，右侧产品卡片实时重绘。
 4. **操作区**：`↺ 重置推荐`（全部弹回 recommended）+ `确认，就按这个做 ↗`（`sendPrompt()` 回传）。
 
-#### 铁律：静态骨架 + 脚本增强
+#### 铁律：静态骨架 + 脚本增强 + 禁用 createElement
 
 历史版本曾因"界面全靠 JS 生成、脚本被拦导致空白"反复失败。现在的架构是：
 
 1. **不用 `<form>`**：渲染器会直接拒绝并报错「widget_code cannot use `<form>` tags」。用 `<div class="pp">` 当容器。
 2. **首帧骨架写在 HTML 里**：`<div class="pp">` 的结构、`hd`/`sub`/`picks`/`ctrls`/`diff`/`pcard` 这些容器都是静态的，第一帧就存在。
 3. **交互与列表填充交给 `<script>`**：模板末尾的脚本负责把 `CONFIG.params` 渲染成控件、绑定拖动/输入/勾选事件、更新对照表与预览。官方 widget 规范明确支持 JS 交互和 `sendPrompt()`。
-4. **剥离行号**：读文件工具会给每行加 `1→` 这类前缀，那只是显示产物、不是文件内容。传给渲染器的代码里**绝不能带这些前缀**。
-5. **直接调用 `show_widget`**：它不在 deferred 工具里，**不要**用 ToolSearch 去找它再转发，那会调用失败。
-6. **只改 `CONFIG`，别动渲染逻辑**：`init()` 及以下所有函数是通用的。拿不准就最小改动，保留字段结构。
+4. **【最重要】脚本里绝不能用 `document.createElement` / `document.createTextNode`**：宿主渲染 iframe 若 5 秒内握手失败，会降级到 inline 路径，那里执行脚本的 `document` 是 `{...document}` 展开出来的**冒充对象**——只有被显式覆盖的 `getElementById`/`querySelector`/`querySelectorAll` 可用，`createElement` 等原型方法全部丢失（值为 `undefined`）。一旦调用就抛错，而宿主会**静默吞掉脚本错误**，用户看到的就是"容器在、控件全空"的面板（卡片因文案写死在静态 HTML 里还能显示，极具迷惑性）。这正是 2026-11-24 那次"没有调节面板"的真正根因。**所有 DOM 一律用 `元素的 innerHTML = '字符串'` 生成，事件用 `addEventListener` 绑定**（iframe CSP 禁内联 onclick，宿主只会绑定注入前就存在的 onclick）。模板里的 `esc()` 负责转义，套用时照抄这套写法。
+5. **剥离行号**：读文件工具会给每行加 `1→` 这类前缀，那只是显示产物、不是文件内容。传给渲染器的代码里**绝不能带这些前缀**。
+6. **直接调用 `show_widget`**：它不在 deferred 工具里，**不要**用 ToolSearch 去找它再转发，那会调用失败。
+7. **只改 `CONFIG`，别动渲染逻辑**：`init()` 及以下所有函数是通用的。拿不准就最小改动，保留字段结构。
 
 **关键约束**：
 - 遵循 IDE 浅色主题：外层用 `var(--color-*)`，白底深字，禁止深色/彩色大背景；产品预览作为被展示的 mockup，可以用产品自己的配色。
@@ -141,4 +142,4 @@ description: 在对话生成产品/内容的过程中，当模型需要向用户
 
 ## 资源
 
-- `assets/panel-template.html`：面板骨架。**数据驱动**——只改 `CONFIG`（title/sub/文案/params/preview），其余渲染逻辑（勾选、拖动、数字输入双向同步、自定义参数、变更对照、预览联动、重置、回传）全是通用的，一律不要重写。
+- `assets/panel-template.html`：面板骨架。**数据驱动**——只改 `CONFIG`（title/sub/文案/params/preview），其余渲染逻辑（勾选、拖动、数字输入双向同步、自定义参数、变更对照、预览联动、重置、回传）全是通用的，一律不要重写。**尤其不要把 innerHTML 生成改成 createElement**——那会让面板在宿主降级路径下整块空白。
