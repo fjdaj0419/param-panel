@@ -1,148 +1,211 @@
-<h2 class="sr-only">参数调节面板：左侧选择参数，右侧产品预览实时变化，可一键重置推荐值</h2>
+<h2 class="sr-only">参数调节面板：先勾选要调整的参数或自行添加，再用进度条或数字输入精确调节，实时查看当前值与调整后值的对照以及最终效果预览</h2>
 <style>
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.pp{--rp:60%;--gp-p:33%;--bl:50%;--br:25%;--gp:8px;--r:14px;
-    --card-bg:#F4F3EF;--card-fg:#2C2C2A;--card-sub:#888780;--chip-bg:#E7E5DE;
-    --accent:#444441;--accent-fg:#FFFFFF;
-    font-family:var(--font-sans);color:var(--color-text-primary);font-size:13px;line-height:1.6}
+.pp{font-family:var(--font-sans);color:var(--color-text-primary);font-size:13px;line-height:1.6}
 .pp .hd{font-weight:500;font-size:15px;margin-bottom:2px}
-.pp .sub{color:var(--color-text-secondary);margin-bottom:14px}
-.pp .grid{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
-.pp .f{margin-bottom:14px}
-.pp .lab{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;color:var(--color-text-secondary)}
-.pp .lab b{font-weight:500;color:var(--color-text-primary)}
-.seg{display:flex;gap:3px;background:#F1EFE8;padding:3px;border-radius:9px}
-.seg input{position:absolute;opacity:0;width:0;height:0}
-.seg label{flex:1;text-align:center;padding:5px 2px;border-radius:7px;cursor:pointer;color:#5F5E5A;font-size:12px}
-.seg input:checked+label{background:#FFFFFF;color:#2C2C2A;font-weight:500}
-.trk{position:relative;height:22px;margin:15px 0 2px}
-.trk .rail{position:absolute;left:0;right:0;top:9px;height:4px;background:#E7E5DE;border-radius:2px}
-.trk .fill{position:absolute;left:0;top:9px;height:4px;background:#2C2C2A;border-radius:2px;width:var(--p)}
-.trk .knob{position:absolute;top:4px;width:14px;height:14px;border-radius:50%;background:#FFFFFF;border:1.5px solid #2C2C2A;transform:translateX(-50%);left:var(--p)}
-.trk input{position:absolute;opacity:0;width:0;height:0}
-.trk label{position:absolute;top:-4px;bottom:-4px;width:18%;transform:translateX(-50%);cursor:pointer}
-.trk input:checked+label::after{content:attr(data-v);position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:500;color:var(--color-text-primary);white-space:nowrap}
-.sw{position:relative;width:34px;height:20px;border-radius:10px;background:#D3D1C7;appearance:none;-webkit-appearance:none;cursor:pointer;outline:none;transition:background .15s}
-.sw:checked{background:#2C2C2A}
-.sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#FFFFFF;transition:left .15s}
-.sw:checked::after{left:16px}
-.acts{display:flex;gap:8px;margin-top:16px}
-.acts .rst{flex:0 0 auto;font-size:12px;padding:7px 12px;border:0.5px solid var(--color-border-secondary);border-radius:8px;background:transparent;color:var(--color-text-secondary);cursor:pointer}
-.acts .ok{flex:1;font-size:12px;font-weight:500;padding:8px 10px;border:0.5px solid #2C2C2A;border-radius:8px;background:#2C2C2A;color:#FFFFFF;cursor:pointer;white-space:nowrap}
-.stage{background:var(--color-background-tertiary);border-radius:var(--border-radius-lg);padding:16px;display:flex;align-items:center;justify-content:center;min-height:210px}
-.pcard{width:100%;background:var(--card-bg);color:var(--card-fg);border-radius:var(--r);padding:16px}
-.pcard .badge{display:none;font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--accent);color:var(--accent-fg);margin-bottom:8px}
-.pp:has(#sci:checked) .pcard .badge{display:inline-block}
-.pcard .kick{font-size:11px;letter-spacing:1px;color:var(--card-sub);margin-bottom:4px}
-.pcard .ttl{font-size:16px;font-weight:500;margin-bottom:4px}
-.pcard .dsc{font-size:12px;color:var(--card-sub);margin-bottom:12px}
-.pcard .chips{display:flex;gap:var(--gp);margin-bottom:14px;flex-wrap:wrap}
-.pcard .chip{font-size:11px;padding:3px 9px;border-radius:calc(var(--r) / 2);background:var(--chip-bg)}
-.pcard .barw{position:relative;height:6px;border-radius:3px;background:var(--chip-bg);margin-bottom:12px;overflow:hidden}
-.pcard .bar{position:absolute;top:0;bottom:0;left:var(--bl);right:var(--br);background:var(--accent);border-radius:3px}
-.pcard .foot{display:flex;justify-content:space-between;align-items:center;gap:var(--gp)}
-.pcard .plab{font-size:11px;color:var(--card-sub)}
-.pcard .btn{font-size:12px;font-weight:500;padding:7px 14px;border-radius:calc(var(--r) / 2);background:var(--accent);color:var(--accent-fg);white-space:nowrap}
-.pp:has(#tone-mono:checked){--card-bg:#F4F3EF;--card-fg:#2C2C2A;--card-sub:#888780;--chip-bg:#E7E5DE;--accent:#444441;--accent-fg:#FFFFFF}
-.pp:has(#tone-night:checked){--card-bg:#1C1C1E;--card-fg:#F5F5F7;--card-sub:#9A9AA0;--chip-bg:#2E2E31;--accent:#FF9F0A;--accent-fg:#1C1C1E}
-.pp:has(#tone-vivid:checked){--card-bg:#FFF1EA;--card-fg:#4A1B0C;--card-sub:#A25C3E;--chip-bg:#F5C4B3;--accent:#D85A30;--accent-fg:#FFFFFF}
-.pp:has(#r0:checked){--rp:0%;--r:0px}
-.pp:has(#r20:checked){--rp:20%;--r:5px}
-.pp:has(#r40:checked){--rp:40%;--r:10px}
-.pp:has(#r60:checked){--rp:60%;--r:14px}
-.pp:has(#r80:checked){--rp:80%;--r:18px}
-.pp:has(#r100:checked){--rp:100%;--r:24px}
-.pp:has(#g4:checked){--gp:4px;--gp-p:0%}
-.pp:has(#g8:checked){--gp:8px;--gp-p:33%}
-.pp:has(#g12:checked){--gp:12px;--gp-p:66%}
-.pp:has(#g16:checked){--gp:16px;--gp-p:100%}
-.pp:has(#pmin0:checked){--bl:0%}
-.pp:has(#pmin1:checked){--bl:25%}
-.pp:has(#pmin2:checked){--bl:50%}
-.pp:has(#pmin3:checked){--bl:75%}
-.pp:has(#pmin4:checked){--bl:100%}
-.pp:has(#pmax2:checked){--br:100%}
-.pp:has(#pmax4:checked){--br:75%}
-.pp:has(#pmax6:checked){--br:50%}
-.pp:has(#pmax8:checked){--br:25%}
-.pp:has(#pmax10:checked){--br:0%}
+.pp .sub{color:var(--color-text-secondary);margin-bottom:10px}
+.pp .step{font-size:11px;letter-spacing:.5px;color:var(--color-text-tertiary);margin:12px 0 7px}
+.pp .picks{display:flex;flex-wrap:wrap;gap:6px}
+.pp .pick{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);cursor:pointer;background:var(--color-background-secondary)}
+.pp .pick input{margin:0}
+.pp .pick .cur{color:var(--color-text-tertiary);font-size:11px}
+.pp .custom{display:flex;gap:6px;margin-top:8px}
+.pp .custom input{flex:1;min-width:0;font-size:12px;padding:6px 8px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.pp .custom button,.pp .mini{font-size:12px;padding:6px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer;white-space:nowrap}
+.pp .grid{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:18px;align-items:start}
+.pp .row{padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pp .row.off{opacity:.35;pointer-events:none}
+.pp .row .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
+.pp .row .top b{font-weight:500}
+.pp .row .nums{font-size:11px;color:var(--color-text-secondary);white-space:nowrap}
+.pp .row .nums em{font-style:normal;color:var(--color-text-primary);font-weight:500}
+.pp .row .ctl{display:flex;align-items:center;gap:8px}
+.pp input[type=range]{flex:1;min-width:0;accent-color:var(--color-text-primary);height:18px;cursor:pointer}
+.pp input[type=number]{width:64px;flex:0 0 auto;font-size:12px;padding:4px 6px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);text-align:right}
+.pp .segs{display:flex;gap:3px;flex-wrap:wrap}
+.pp .segs button{font-size:11px;padding:4px 8px;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-secondary);cursor:pointer}
+.pp .segs button.on{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
+.pp .diff{font-size:11px}
+.pp .diff .drow{display:flex;justify-content:space-between;gap:6px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pp .diff .drow b{font-weight:500;text-align:right}
+.pp .stage{background:var(--color-background-tertiary);border-radius:var(--border-radius-lg);padding:12px;min-height:200px}
+.pcard{--bg:#F4F3EF;--fg:#2C2C2A;--sub:#888780;--chip:#E7E5DE;--ac:#444441;--afg:#FFFFFF;background:var(--bg);color:var(--fg);border-radius:14px;padding:16px;transition:background .12s,border-radius .12s}
+.pcard .bd{display:none;font-size:11px;font-weight:500;padding:2px 8px;border-radius:999px;background:var(--ac);color:var(--afg);margin-bottom:8px}
+.pcard .kc{font-size:11px;letter-spacing:1px;color:var(--sub);margin-bottom:4px}
+.pcard .tt{font-size:16px;font-weight:500;margin-bottom:4px}
+.pcard .ds{font-size:12px;color:var(--sub);margin-bottom:12px}
+.pcard .cs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.pcard .ci{font-size:11px;padding:3px 9px;border-radius:6px;background:var(--chip)}
+.pcard .bw{height:6px;border-radius:3px;background:var(--chip);margin-bottom:10px;overflow:hidden}
+.pcard .br{height:100%;background:var(--ac);border-radius:3px;transition:width .12s,margin-left .12s}
+.pcard .ft{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pcard .pl{font-size:11px;color:var(--sub)}
+.pcard .bt{font-size:12px;font-weight:500;padding:7px 14px;border-radius:7px;background:var(--ac);color:var(--afg);white-space:nowrap}
+.pp .acts{display:flex;gap:8px;margin-top:14px}
+.pp .acts button{flex:1;font-size:13px;font-weight:500;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer}
+.pp .acts .ok{background:var(--color-text-primary);color:var(--color-background-primary);border-color:var(--color-text-primary)}
 </style>
-<div class="pp">
-  <div class="hd">夏日活动页 · 外观微调</div>
-  <div class="sub">左边挑，右边卡片立刻变样。挑到顺眼再确认。</div>
+<div class="pp" id="pp">
+  <div class="hd" id="hd"></div>
+  <div class="sub" id="sub"></div>
+  <div class="step">第一步 · 选参数（可勾选，也可自己加）</div>
+  <div class="picks" id="picks"></div>
+  <div class="custom"><input type="text" id="cust" placeholder="自定义参数名，如：阴影强度"><button type="button" id="add">添加参数</button></div>
   <div class="grid">
-    <div class="ctrl">
-      <div class="f">
-        <div class="lab"><b>配色风格</b></div>
-        <div class="seg">
-          <input type="radio" name="tone" id="tone-mono" checked data-def><label for="tone-mono">极简灰</label>
-          <input type="radio" name="tone" id="tone-night"><label for="tone-night">夜间</label>
-          <input type="radio" name="tone" id="tone-vivid"><label for="tone-vivid">珊瑚</label>
-        </div>
-      </div>
-      <div class="f">
-        <div class="lab"><b>圆角大小</b></div>
-        <div class="trk">
-          <div class="rail"></div><div class="fill" style="--p:var(--rp)"></div><div class="knob" style="--p:var(--rp)"></div>
-          <input type="radio" name="rad" id="r0"><label for="r0" style="left:0%" data-v="0%"></label>
-          <input type="radio" name="rad" id="r20"><label for="r20" style="left:20%" data-v="20%"></label>
-          <input type="radio" name="rad" id="r40"><label for="r40" style="left:40%" data-v="40%"></label>
-          <input type="radio" name="rad" id="r60" checked data-def><label for="r60" style="left:60%" data-v="60%"></label>
-          <input type="radio" name="rad" id="r80"><label for="r80" style="left:80%" data-v="80%"></label>
-          <input type="radio" name="rad" id="r100"><label for="r100" style="left:100%" data-v="100%"></label>
-        </div>
-      </div>
-      <div class="f">
-        <div class="lab"><b>元素间距</b></div>
-        <div class="trk">
-          <div class="rail"></div><div class="fill" style="--p:var(--gp-p)"></div><div class="knob" style="--p:var(--gp-p)"></div>
-          <input type="radio" name="gap" id="g4"><label for="g4" style="left:0%" data-v="4px"></label>
-          <input type="radio" name="gap" id="g8" checked data-def><label for="g8" style="left:33%" data-v="8px"></label>
-          <input type="radio" name="gap" id="g12"><label for="g12" style="left:66%" data-v="12px"></label>
-          <input type="radio" name="gap" id="g16"><label for="g16" style="left:100%" data-v="16px"></label>
-        </div>
-      </div>
-      <div class="f">
-        <div class="lab"><b>限时徽章</b><span>可选</span></div>
-        <input type="checkbox" class="sw" id="sci" data-def="0">
-      </div>
-      <div class="f">
-        <div class="lab"><b>价格下限</b><span>起</span></div>
-        <div class="trk">
-          <div class="rail"></div><div class="fill" style="--p:var(--bl)"></div><div class="knob" style="--p:var(--bl)"></div>
-          <input type="radio" name="pmin" id="pmin0"><label for="pmin0" style="left:0%" data-v="¥0"></label>
-          <input type="radio" name="pmin" id="pmin1"><label for="pmin1" style="left:25%" data-v="¥100"></label>
-          <input type="radio" name="pmin" id="pmin2" checked data-def><label for="pmin2" style="left:50%" data-v="¥200"></label>
-          <input type="radio" name="pmin" id="pmin3"><label for="pmin3" style="left:75%" data-v="¥300"></label>
-          <input type="radio" name="pmin" id="pmin4"><label for="pmin4" style="left:100%" data-v="¥400"></label>
-        </div>
-      </div>
-      <div class="f">
-        <div class="lab"><b>价格上限</b><span>止</span></div>
-        <div class="trk">
-          <div class="rail"></div><div class="fill" style="--p:calc(100% - var(--br))"></div><div class="knob" style="--p:calc(100% - var(--br))"></div>
-          <input type="radio" name="pmax" id="pmax2"><label for="pmax2" style="left:0%" data-v="¥200"></label>
-          <input type="radio" name="pmax" id="pmax4"><label for="pmax4" style="left:25%" data-v="¥400"></label>
-          <input type="radio" name="pmax" id="pmax6"><label for="pmax6" style="left:50%" data-v="¥600"></label>
-          <input type="radio" name="pmax" id="pmax8" checked data-def><label for="pmax8" style="left:75%" data-v="¥800"></label>
-          <input type="radio" name="pmax" id="pmax10"><label for="pmax10" style="left:100%" data-v="¥1000"></label>
-        </div>
-      </div>
-      <div class="acts">
-        <input type="button" class="rst" value="↺ 重置推荐" onclick="var r=this.closest('.pp');r.querySelectorAll('input[data-def]').forEach(function(e){e.checked=e.getAttribute('data-def')!=='0'})">
-        <button type="button" class="ok" onclick="var r=this.closest('.pp'),g=function(n){var e=r.querySelector('input[name='+n+']:checked');return e?(e.getAttribute('data-v')||''):''},t=r.querySelector('input[name=tone]:checked'),L=[];if(t)L.push('已确认：配色风格 = '+t.nextElementSibling.textContent+'。请据此继续生成。');if(g('rad'))L.push('已确认：圆角大小 = '+g('rad')+'。请据此继续生成。');if(g('gap'))L.push('已确认：元素间距 = '+g('gap')+'。请据此继续生成。');L.push('已确认：限时徽章 = '+(document.getElementById('sci').checked?'显示':'不显示')+'。请据此继续生成。');L.push('已确认：价格区间 = '+g('pmin')+'–'+g('pmax')+'。请据此继续生成。');if(typeof sendPrompt==='function')sendPrompt(L.join('\n'))">确认，就按这个做 ↗</button>
-      </div>
+    <div>
+      <div class="step">第二步 · 调数值（拖动进度条或手动输入）</div>
+      <div id="ctrls"></div>
     </div>
-    <div class="stage">
-      <div class="pcard">
-        <div class="badge">限时</div>
-        <div class="kick">SUMMER 2026</div>
-        <div class="ttl">夏日特惠</div>
-        <div class="dsc">全场通用券 · 限时领取</div>
-        <div class="chips"><span class="chip">轻量</span><span class="chip">包邮</span><span class="chip">可退</span></div>
-        <div class="barw"><div class="bar"></div></div>
-        <div class="foot"><span class="plab">价格区间</span><span class="plab">券后直降</span><span class="btn">立即查看</span></div>
-      </div>
+    <div>
+      <div class="step">变更对照</div>
+      <div class="diff" id="diff"></div>
+      <div class="step">最终效果预览</div>
+      <div class="stage"><div class="pcard" id="pcard">
+        <div class="bd" id="pbadge">限时</div>
+        <div class="kc" id="pkick">SUMMER 2026</div>
+        <div class="tt" id="pttl">夏日特惠</div>
+        <div class="ds" id="pdsc">全场通用券 · 限时领取</div>
+        <div class="cs" id="pchips"></div>
+        <div class="bw"><div class="br" id="pbar"></div></div>
+        <div class="ft"><span class="pl" id="pprice">价格区间</span><span class="bt" id="pbtn">立即查看</span></div>
+      </div></div>
     </div>
   </div>
+  <div class="acts"><button type="button" id="rst">↺ 重置推荐</button><button type="button" class="ok" id="ok">确认，就按这个做 ↗</button></div>
 </div>
+<script>
+const CFG={
+  title:'夏日活动页 · 外观微调',
+  sub:'先勾选要调的参数（也能自己加），再拖动进度条或输入数值，右侧实时预览。',
+  params:[
+    {id:'tone',name:'配色风格',type:'segment',current:'极简灰',recommended:'极简灰',options:['极简灰','夜间','珊瑚'],on:true},
+    {id:'radius',name:'圆角大小',type:'number',current:14,recommended:14,min:0,max:24,step:1,unit:'px',on:true},
+    {id:'gap',name:'元素间距',type:'number',current:8,recommended:8,min:4,max:20,step:1,unit:'px',on:false},
+    {id:'badge',name:'限时徽章',type:'switch',current:false,recommended:false,on:false},
+    {id:'pmin',name:'价格下限',type:'number',current:100,recommended:200,min:0,max:1000,step:50,unit:'¥',prefixUnit:true,on:true},
+    {id:'pmax',name:'价格上限',type:'number',current:900,recommended:800,min:0,max:1000,step:50,unit:'¥',prefixUnit:true,on:true}
+  ],
+  preview(v){
+    const T={'极简灰':['#F4F3EF','#2C2C2A','#888780','#E7E5DE','#444441','#FFFFFF'],'夜间':['#1C1C1E','#F5F5F7','#9A9AA0','#2E2E31','#FF9F0A','#1C1C1E'],'珊瑚':['#FFF1EA','#4A1B0C','#A25C3E','#F5C4B3','#D85A30','#FFFFFF']};
+    const t=T[v.tone]||T['极简灰'];
+    return {bg:t[0],fg:t[1],sub:t[2],chip:t[3],ac:t[4],afg:t[5],
+      radius:(v.radius||0)+'px',gap:(v.gap||8)+'px',badge:!!v.badge,
+      barL:((v.pmin||0)/1000*100)+'%',barW:(Math.max(0,(v.pmax||0)-(v.pmin||0))/1000*100)+'%',
+      price:'¥'+(v.pmin||0)+' – ¥'+(v.pmax||0)};
+  }
+};
+const $=id=>document.getElementById(id),ST={v:{},on:{}};
+function init(){
+  $('hd').textContent=CFG.title;$('sub').textContent=CFG.sub;
+  $('pkick').textContent=(CFG.kicker||'SUMMER 2026');
+  $('pttl').textContent=(CFG.titleText||'夏日特惠');
+  $('pdsc').textContent=(CFG.desc||'全场通用券 · 限时领取');
+  $('pbtn').textContent=(CFG.buttonText||'立即查看');
+  $('pchips').innerHTML=(CFG.chips||['轻量','包邮','可退']).map(x=>'<span class="ci">'+x+'</span>').join('');
+  CFG.params.forEach(p=>{ST.v[p.id]=p.recommended;ST.on[p.id]=!!p.on});
+  renderPicks();renderCtrls();sync();
+}
+function fmt(p,v){if(p.type==='switch')return v?'开':'关';if(p.type==='segment')return v;return p.prefixUnit?(p.unit||'')+v:v+(p.unit||'')}
+function fmtD(p,d){const x=Math.round(d*10)/10;if(Math.abs(x)<1e-9)return '0';const sign=x>0?'+':'-',a=Math.abs(x);return sign+(p.prefixUnit?(p.unit||'')+a:a+(p.unit||''))}
+function renderPicks(){
+  const el=$('picks');el.innerHTML='';
+  CFG.params.forEach(p=>{
+    const lab=document.createElement('label');lab.className='pick';
+    const cb=document.createElement('input');cb.type='checkbox';cb.checked=ST.on[p.id];
+    cb.onchange=()=>{ST.on[p.id]=cb.checked;sync()};
+    const n=document.createElement('span');n.textContent=p.name;
+    const c=document.createElement('span');c.className='cur';c.textContent='当前 '+fmt(p,p.current);
+    lab.append(cb,n,c);el.append(lab);
+  });
+}
+function renderCtrls(){
+  const el=$('ctrls');el.innerHTML='';
+  CFG.params.forEach(p=>{
+    const row=document.createElement('div');row.className='row';row.id='row-'+p.id;
+    const top=document.createElement('div');top.className='top';
+    const nm=document.createElement('b');nm.textContent=p.name;
+    const nums=document.createElement('span');nums.className='nums';nums.id='nums-'+p.id;
+    top.append(nm,nums);
+    const ctl=document.createElement('div');ctl.className='ctl';
+    if(p.type==='number'){
+      const r=document.createElement('input');r.type='range';r.min=p.min;r.max=p.max;r.step=p.step;r.value=ST.v[p.id];r.id='r-'+p.id;
+      r.oninput=()=>set(p.id,r.value);
+      const n=document.createElement('input');n.type='number';n.min=p.min;n.max=p.max;n.step=p.step;n.value=ST.v[p.id];n.id='n-'+p.id;
+      n.oninput=()=>set(p.id,n.value);
+      ctl.append(r,n);
+    }else if(p.type==='segment'){
+      const box=document.createElement('div');box.className='segs';box.id='seg-'+p.id;
+      p.options.forEach(o=>{const b=document.createElement('button');b.type='button';b.textContent=o;b.dataset.v=o;b.onclick=()=>set(p.id,o);box.append(b)});
+      ctl.append(box);
+    }else{
+      const b=document.createElement('button');b.type='button';b.className='mini';b.id='sw-'+p.id;b.onclick=()=>set(p.id,!ST.v[p.id]);ctl.append(b);
+    }
+    row.append(top,ctl);el.append(row);
+  });
+}
+function set(id,v){
+  const p=CFG.params.find(x=>x.id===id);if(!p)return;
+  if(p.type==='number'){
+    v=Math.max(p.min,Math.min(p.max,Number(v)||0));
+    $('r-'+id).value=v;$('n-'+id).value=v;
+  }else if(p.type==='switch'){v=!!v}
+  ST.v[id]=v;sync();
+}
+function sync(){
+  CFG.params.forEach(p=>{
+    const v=ST.v[p.id];
+    const row=$('row-'+p.id);if(row)row.classList.toggle('off',!ST.on[p.id]);
+    const nums=$('nums-'+p.id);
+    if(nums){
+      const dt=p.type==='number'?fmtD(p,v-p.current):(v===p.current?'无变化':'已改变');
+      nums.innerHTML='当前 '+fmt(p,p.current)+' · <em>调整后 '+fmt(p,v)+'</em> <span style="color:var(--color-text-tertiary)">'+dt+'</span>';
+    }
+    if(p.type==='segment'){const box=$('seg-'+p.id);if(box)Array.from(box.children).forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
+    if(p.type==='switch'){const b=$('sw-'+p.id);if(b)b.textContent=v?'已开启 · 点击关闭':'未开启 · 点击开启'}
+  });
+  renderDiff();applyPreview();
+}
+function vals(){const o={};CFG.params.forEach(p=>o[p.id]=ST.v[p.id]);return o}
+function renderDiff(){
+  const el=$('diff');el.innerHTML='';let any=false;
+  CFG.params.forEach(p=>{
+    if(!ST.on[p.id])return;
+    const v=ST.v[p.id];
+    const ch=p.type==='number'?Math.abs(v-p.current)>1e-9:v!==p.current;
+    if(!ch)return;any=true;
+    const r=document.createElement('div');r.className='drow';
+    const a=document.createElement('span');a.textContent=p.name;
+    const b=document.createElement('b');
+    b.textContent=fmt(p,p.current)+' → '+fmt(p,v)+(p.type==='number'?' ('+fmtD(p,v-p.current)+')':'');
+    r.append(a,b);el.append(r);
+  });
+  if(!any){const r=document.createElement('div');r.className='drow';r.innerHTML='<span>暂无变更</span><b>调整数值后显示</b>';el.append(r)}
+}
+function applyPreview(){
+  const d=CFG.preview(vals()),c=$('pcard');
+  c.style.setProperty('--bg',d.bg);c.style.setProperty('--fg',d.fg);c.style.setProperty('--sub',d.sub);
+  c.style.setProperty('--chip',d.chip);c.style.setProperty('--ac',d.ac);c.style.setProperty('--afg',d.afg);
+  c.style.borderRadius=d.radius;$('pchips').style.gap=d.gap;
+  $('pbadge').style.display=d.badge?'inline-block':'none';
+  $('pbar').style.marginLeft=d.barL;$('pbar').style.width=d.barW;
+  $('pprice').textContent=d.price;
+}
+$('add').onclick=()=>{
+  const n=$('cust').value.trim();if(!n)return;
+  const id='c'+Date.now();
+  CFG.params.push({id,name:n,type:'number',current:50,recommended:50,min:0,max:100,step:1,unit:'',on:true,custom:true});
+  ST.v[id]=50;ST.on[id]=true;$('cust').value='';
+  renderPicks();renderCtrls();sync();
+};
+$('rst').onclick=()=>{CFG.params.forEach(p=>{ST.v[p.id]=p.recommended});renderCtrls();sync()};
+$('ok').onclick=()=>{
+  const L=[];
+  CFG.params.forEach(p=>{
+    if(!ST.on[p.id])return;
+    const v=ST.v[p.id];
+    L.push('已确认：'+p.name+' = '+fmt(p,v)+'（当前 '+fmt(p,p.current)+(p.type==='number'?'，变化 '+fmtD(p,v-p.current):'')+'）。请据此继续生成。');
+  });
+  if(typeof sendPrompt==='function')sendPrompt(L.join('\n'));
+};
+init();
+</script>
